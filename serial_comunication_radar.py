@@ -143,19 +143,6 @@ class ModuleCommunication:
 
 
 def read_distance(com):
-    # Wait for it to start
-    com.wait_start()
-    print('Sensor activated')
-
-    # Read out distance start
-    dist_start = com.register_read(0x81)
-    print(f'dist_start={dist_start /1000} m')
-
-    dist_length = com.register_read(0x82)
-    print(f'dist_length={dist_length / 1000} m')
-
-    start = time.monotonic()
-
     com.register_write(3,4)
     # Wait for data read
     com.wait_for_data(2)
@@ -165,8 +152,8 @@ def read_distance(com):
     for count in range(dist_count):
         dist_distance = com.register_read(0xB1 + 2 * count)
         dist_amplitude = com.register_read(0xB2 + 2 * count)
-        print(f'{ dist_{count}_distance={dist_distance /1000} m', end = '')
-        print(f ' dist_{count}_amplitude={dist_amplitude}', end = '')
+        print(f'dist_{count}_distance={dist_distance /1000} m', end = '')
+        print(f' dist_{count}_amplitude={dist_amplitude}', end = '')
         list_distances.append(dist_distance)
 
     mean_distance = sum(list_distances) / len(list_distances)
@@ -260,11 +247,44 @@ def _streaming_mode_distance(com, duration):
         print(f'Detected {dist_count} peaks:', end='')
         for count in range(dist_count):
             (dist_amplitude, dist_distance) = struct.unpack("<Hf", buffer[count * 6:count * 6 + 6])
-            print(f' dist_{count}_distance={dist_distancei m', end='')
+            print(f' dist_{count}_distance={dist_distance} m', end='')
             print(f' dist_{count}_amplitude={dist_amplitude}', end='')
         print('', end='', flush=True)
 
 
+def init_service_radar_distance():
+    # Rasberry Mini Uart PORT
+    port = '/dev/ttyS0'
+    # XM132 is true
+    flowcontrol = True
+    com = ModuleCommunication(port, flowcontrol)
+    # Make sure that module is stopped
+    com.register_write(0x03, 0)
+    # Give some time to stop (status register could be polled too)
+    time.sleep(0.5)
+    # Clear any errors and status
+    com.register_write(0x3, 4)
+    # Read product ID
+    product_identification =  com.register_read(0x10)
+    print(f'product_identification=0x{product_identification:08X}')
+
+    version = com.buffer_read(0)
+    print(f'Software version: {version}')
+    
+    # Set Mode read distance
+    mode = 'distance'
+    com.register_write(0x2, 0x400)
+    
+    # Update rate 1Hz
+    com.register_write(0x23, 1000)
+    
+    # Disable UART streaming mode
+    com.register_write(5, 0)
+
+    # Activate and start
+    com.register_write(3,6)
+
+    return com
 
 def read_radar_distance():
     # Rasberry Mini Uart PORT
@@ -287,7 +307,7 @@ def read_radar_distance():
     
     # Set Mode read distance
     mode = 'distance'
-    com.register_write(0x2. 0x400)
+    com.register_write(0x2, 0x400)
     
     # Update rate 1Hz
     com.register_write(0x23, 1000)
