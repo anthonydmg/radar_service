@@ -2,7 +2,8 @@ import sys
 import serial
 import sys
 import time
-
+import struct
+from functools import reduce
 class SerialConnection:
     """Wrap a serial.Serial connection and toggle reset and boot0."""
 
@@ -400,11 +401,28 @@ class Stm32Loader:
         self._wait_for_ack("0x00 end")
         return version
 
+    def get_id(self):
+        """Send the 'Get ID' command and return the device (model) ID."""
+        self.command(self.Command.GET_ID, "Get ID")
+        length = bytearray(self.connection.read())[0]
+        id_data = bytearray(self.connection.read(length + 1))
+        self._wait_for_ack("0x02 end")
+        _device_id = reduce(lambda x, y: x * 0x100 + y, id_data)
+        return _device_id
+
+
+    def write(self, *data):
+        """Write the given data to the MCU."""
+        for data_bytes in data:
+            if isinstance(data_bytes, int):
+                data_bytes = struct.pack("B", data_bytes)
+            self.serial_connection.write(data_bytes)
+        
     def read_device_id(self):
         """Show chip ID and bootloader version."""
         boot_version = self.get()
         self.debug(0, "Bootloader version: 0x%X" % boot_version)
-        device_id = self.stm32.get_id()
+        device_id = self.get_id()
         self.debug(
             0, "Chip id: 0x%X (%s)" % (device_id, self.CHIP_IDS.get(device_id, "Unknown"))
         )
