@@ -1,6 +1,4 @@
-from msilib.schema import Error
 import sys
-from turtle import st
 import serial
 import sys
 import time
@@ -322,6 +320,7 @@ class Stm32Loader:
             print("Activating bootloader (select UART)")
             self.reset_from_system_memory()
         except Exception as e:
+            print(str(e))
             print(
                 "Can't init into bootloader. Ensure that BOOT0 is enabled and reset the device.",
                 file=sys.stderr,
@@ -381,7 +380,7 @@ class Stm32Loader:
                 return
 
         # not successful
-        raise Error("Bad reply from bootloader")
+        raise Exception("Bad reply from bootloader")
     
     def debug(self, level, message):
         """Print the given message if its level is low enough."""
