@@ -5,6 +5,63 @@ import time
 import struct
 from functools import reduce
 import operator
+import math
+
+class ShowProgress:
+    """
+    Show progress through a progress bar, as a context manager.
+    Return the progress bar object on context enter, allowing the
+    caller to to call next().
+    Allow to supply the desired progress bar as None, to disable
+    progress bar output.
+    """
+
+    class _NoProgressBar:
+        """
+        Stub to replace a real progress.bar.Bar.
+        Use this if you don't want progress bar output, or if
+        there's an ImportError of progress module.
+        """
+
+        def next(self):  # noqa
+            """Do nothing; be compatible to progress.bar.Bar."""
+
+        def finish(self):
+            """Do nothing; be compatible to progress.bar.Bar."""
+
+    def __init__(self, progress_bar_type):
+        """
+        Construct the context manager object.
+        :param progress_bar_type type: Type of progress bar to use.
+           Set to None if you don't want progress bar output.
+        """
+        self.progress_bar_type = progress_bar_type
+        self.progress_bar = None
+
+    def __call__(self, message, maximum):
+        """
+        Return a context manager for a progress bar.
+        :param str message: Message to show next to the progress bar.
+        :param int maximum: Maximum value of the progress bar (value at 100%).
+          E.g. 256.
+        :return ShowProgress: Context manager object.
+        """
+        if not self.progress_bar_type:
+            self.progress_bar = self._NoProgressBar()
+        else:
+            self.progress_bar = self.progress_bar_type(
+                message, max=maximum, suffix="%(index)d/%(max)d"
+            )
+
+        return self
+
+    def __enter__(self):
+        """Enter context: return progress bar to allow calling next()."""
+        return self.progress_bar
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit context: clean up by finish()ing the progress bar."""
+        self.progress_bar.finish()
 
 
 class SerialConnection:
@@ -169,7 +226,7 @@ class Stm32Loader:
         # ST RM0444 section 38.1 Unique device ID register
         "G0": 0x1FFF7590,
     }
-
+    
     UID_SWAP = [[1, 0], [3, 2], [7, 6, 5, 4], [11, 10, 9, 8]]
 
     # Part does not support unique ID feature
@@ -304,12 +361,17 @@ class Stm32Loader:
     0x801: "Wiznet W7500",
     }
 
+    
+
     SYNCHRONIZE_ATTEMPTS = 2
     def __init__(self) -> None:
-         self._timeout = 5
-         self.serial_port = '/dev/ttyS0'
-         self.baud_rate = 115200,
-         self.parity = 'none',
+        self._timeout = 5
+        self.serial_port = '/dev/ttyS0'
+        self.baud_rate = 115200,
+        self.parity = 'none',
+        self.data_transfer_size = 256
+        self.flash_page_size = 1024
+        self.show_progress = ShowProgress(None)
 
     def connect(self):
         self.serial_connection = SerialConnection();
@@ -519,6 +581,65 @@ class Stm32Loader:
         finally:
             self.serial_connection.timeout = previous_timeout_value
         self.debug(10, "    Extended Erase memory done")
+    
+    @staticmethod
+    def _encode_address(address):
+        """Return the given address as big-endian bytes with a checksum."""
+        # address in four bytes, big-endian
+        address_bytes = bytearray(struct.pack(">I", address))
+        # checksum as single byte
+        checksum_byte = struct.pack("B", reduce(operator.xor, address_bytes))
+        return address_bytes + checksum_byte
+
+    def write_memory(self, address, data):
+        """
+        Write the given data to flash at the given address.
+        Supports maximum 256 bytes.
+        """
+        nr_of_bytes = len(data)
+        if nr_of_bytes == 0:
+            return
+        if nr_of_bytes > self.data_transfer_size:
+            raise Exception("Can not write more than 256 bytes at once.")
+        self.command(self.Command.WRITE_MEMORY, "Write memory")
+        self.write_and_ack("0x31 address failed", self._encode_address(address))
+
+        # pad data length to multiple of 4 bytes
+        if nr_of_bytes % 4 != 0:
+            padding_bytes = 4 - (nr_of_bytes % 4)
+            nr_of_bytes += padding_bytes
+            # append value 0xFF: flash memory value after erase
+            data = bytearray(data)
+            data.extend([0xFF] * padding_bytes)
+
+        self.debug(10, "    %s bytes to write" % [nr_of_bytes])
+        checksum = reduce(operator.xor, data, nr_of_bytes - 1)
+        self.write_and_ack("0x31 programming failed", nr_of_bytes - 1, data, checksum)
+        self.debug(10, "    Write memory done")
+
+    def write_memory_data(self, address, data):
+        """
+        Write the given data to flash.
+        Data length may be more than 256 bytes.
+        """
+        length = len(data)
+        chunk_count = int(math.ceil(length / float(self.data_transfer_size)))
+        offset = 0
+        self.debug(5, "Write %d chunks at address 0x%X..." % (chunk_count, address))
+
+        with self.show_progress("Writing", maximum=chunk_count) as progress_bar:
+            while length:
+                write_length = min(length, self.data_transfer_size)
+                self.debug(
+                    10,
+                    "Write %(len)d bytes at 0x%(address)X"
+                    % {"address": address, "len": write_length},
+                )
+                self.write_memory(address, data[offset : offset + write_length])
+                progress_bar.next()
+                length -= write_length
+                offset += write_length
+                address += write_length
 
 
 def main():
@@ -546,7 +667,12 @@ def main():
             loader.debug(0, "Quit")
             loader.stm32.reset_from_flash()
         '''
-        loader.extended_erase_memory()
+        #loader.extended_erase_memory()
+        address = 0x08000000
+        with open('acc_module_server.bin', "rb") as read_file:
+                binary_data = bytearray(read_file.read())
+
+        loader.write_memory_data(address, binary_data)
 
     except SystemExit:
         print('Ocurrio un error')
