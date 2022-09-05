@@ -426,6 +426,10 @@ class Stm32Loader:
         self.debug(
             0, "Chip id: 0x%X (%s)" % (device_id, self.CHIP_IDS.get(device_id, "Unknown"))
         )
+    
+    def reset(self):
+        """Reset the microcontroller."""
+        self.reset_from_flash()
 
 def main():
     """
