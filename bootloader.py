@@ -4,6 +4,9 @@ import sys
 import time
 import struct
 from functools import reduce
+import operator
+
+
 class SerialConnection:
     """Wrap a serial.Serial connection and toggle reset and boot0."""
 
@@ -477,6 +480,45 @@ class Stm32Loader:
         self.debug(20, "    Unprotect / mass erase done")
         self.debug(20, "    Reset after automatic chip reset due to readout unprotect")
         self.reset_from_system_memory()
+    
+    def extended_erase_memory(self, pages=None):
+        """
+        Erase flash memory using two-byte addressing at the given pages.
+        Set pages to None to erase the full memory.
+        Not all devices support the extended erase command.
+        :param iterable pages: Iterable of integer page addresses, zero-based.
+            Set to None to trigger global mass erase.
+        """
+        self.command(self.Command.EXTENDED_ERASE, "Extended erase memory")
+        if pages:
+            # page erase, see ST AN3155
+            if len(pages) > 65535:
+                raise Exception(
+                    "Can not erase more than 65535 pages at once.\n"
+                    "Set pages to None to do global erase or supply fewer pages."
+                )
+            page_count = (len(pages) & 0xFFFF) - 1
+            page_count_bytes = bytearray(struct.pack(">H", page_count))
+            page_bytes = bytearray(len(pages) * 2)
+            for i, page in enumerate(pages):
+                struct.pack_into(">H", page_bytes, i * 2, page)
+            checksum = reduce(operator.xor, page_count_bytes)
+            checksum = reduce(operator.xor, page_bytes, checksum)
+            self.write(page_count_bytes, page_bytes, checksum)
+        else:
+            # global mass erase: n=0xffff (page count) + checksum
+            # TO DO: support 0xfffe bank 1 erase / 0xfffe bank 2 erase
+            self.write(b"\xff\xff\x00")
+
+        previous_timeout_value = self.serial_connection.timeout
+        self.serial_connection.timeout = 30
+        print("Extended erase (0x44), this can take ten seconds or more")
+        try:
+            self._wait_for_ack("0x44 erasing failed")
+        finally:
+            self.serial_connection.timeout = previous_timeout_value
+        self.debug(10, "    Extended Erase memory done")
+
 
 def main():
     """
@@ -494,7 +536,7 @@ def main():
             loader.reset()
 
         
-        try:
+        '''try:
             loader.readout_unprotect()
         except Exception as e:
             # may be caused by readout protection
@@ -502,6 +544,8 @@ def main():
             loader.debug(0, "Erase failed -- probably due to readout protection")
             loader.debug(0, "Quit")
             loader.stm32.reset_from_flash()
+        '''
+        loader.extended_erase_memory()
 
     except SystemExit:
         print('Ocurrio un error')
