@@ -464,6 +464,19 @@ class Stm32Loader:
     def reset(self):
         """Reset the microcontroller."""
         self.reset_from_flash()
+    
+    def readout_unprotect(self):
+        """
+        Disable readout protection of the flash memory.
+        Beware, this will erase the flash content.
+        """
+        self.command(self.Command.READOUT_UNPROTECT, "Readout unprotect")
+        self._wait_for_ack("0x92 readout unprotect failed")
+        self.debug(20, "    Mass erase -- this may take a while")
+        time.sleep(20)
+        self.debug(20, "    Unprotect / mass erase done")
+        self.debug(20, "    Reset after automatic chip reset due to readout unprotect")
+        self.reset_from_system_memory()
 
 def main():
     """
@@ -479,6 +492,17 @@ def main():
             #loader.perform_commands()
         finally:
             loader.reset()
+
+        
+        try:
+            loader.readout_unprotect()
+        except Exception as e:
+            # may be caused by readout protection
+            print(str(e))
+            loader.debug(0, "Erase failed -- probably due to readout protection")
+            loader.debug(0, "Quit")
+            loader.stm32.reset_from_flash()
+
     except SystemExit:
         print('Ocurrio un error')
 
