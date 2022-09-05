@@ -427,6 +427,39 @@ class Stm32Loader:
             0, "Chip id: 0x%X (%s)" % (device_id, self.CHIP_IDS.get(device_id, "Unknown"))
         )
     
+    def _wait_for_ack(self, info=""):
+        """Read a byte and raise CommandError if it's not ACK."""
+        read_data = bytearray(self.serial_connection.read())
+        print('Wait For Ack. Read:', read_data)
+
+        if not read_data:
+            raise Exception("Can't read port or timeout")
+        reply = read_data[0]
+        if reply == self.Reply.NACK:
+            raise Exception("NACK " + info)
+        if reply != self.Reply.ACK:
+            raise Exception("Unknown response. " + info + ": " + hex(reply))
+
+        return 1
+
+    def write_and_ack(self, message, *data):
+        """Write data to the MCU and wait until it replies with ACK."""
+        # Note: this is a separate method from write() because a keyword
+        # argument after *args was not possible in Python 2
+        print('Data to write:', data)
+        self.write(*data)
+        return self._wait_for_ack(message)
+        
+    def command(self, command, description):
+        """
+        Send the given command to the MCU.
+        Raise CommandError if there's no ACK replied.
+        """
+        self.debug(10, "*** Command: %s" % description)
+        ack_received = self.write_and_ack("Command", command, command ^ 0xFF)
+        if not ack_received:
+            raise Exception("%s (%s) failed: no ack" % (description, command))
+
     def reset(self):
         """Reset the microcontroller."""
         self.reset_from_flash()
