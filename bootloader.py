@@ -512,7 +512,7 @@ class Stm32Loader:
 
         previous_timeout_value = self.serial_connection.timeout
         self.serial_connection.timeout = 10
-        self.serial_connection.connect()
+        #self.serial_connection.connect()
         print("Extended erase (0x44), this can take ten seconds or more")
         try:
             self._wait_for_ack("0x44 erasing failed")
