@@ -391,10 +391,10 @@ class Stm32Loader:
     def get(self):
         """Return the bootloader version and remember supported commands."""
         self.command(self.Command.GET, "Get")
-        length = bytearray(self.connection.read())[0]
-        version = bytearray(self.connection.read())[0]
+        length = bytearray(self.serial_connection.read())[0]
+        version = bytearray(self.serial_connection.read())[0]
         self.debug(10, "    Bootloader version: " + hex(version))
-        data = bytearray(self.connection.read(length))
+        data = bytearray(self.serial_connection.read(length))
         if self.Command.EXTENDED_ERASE in data:
             self.extended_erase = True
         self.debug(10, "    Available commands: " + ", ".join(hex(b) for b in data))
@@ -404,8 +404,8 @@ class Stm32Loader:
     def get_id(self):
         """Send the 'Get ID' command and return the device (model) ID."""
         self.command(self.Command.GET_ID, "Get ID")
-        length = bytearray(self.connection.read())[0]
-        id_data = bytearray(self.connection.read(length + 1))
+        length = bytearray(self.serial_connection.read())[0]
+        id_data = bytearray(self.serial_connection.read(length + 1))
         self._wait_for_ack("0x02 end")
         _device_id = reduce(lambda x, y: x * 0x100 + y, id_data)
         return _device_id
