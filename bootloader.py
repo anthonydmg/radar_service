@@ -435,6 +435,7 @@ class Stm32Loader:
         if not read_data:
             raise Exception("Can't read port or timeout")
         reply = read_data[0]
+        print('Wait For Ack. reply:', reply)
         if reply == self.Reply.NACK:
             raise Exception("NACK " + info)
         if reply != self.Reply.ACK:
