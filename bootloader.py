@@ -385,8 +385,8 @@ class Stm32Loader:
     
     def debug(self, level, message):
         """Print the given message if its level is low enough."""
-        if self.verbosity >= level:
-            print(message, file=sys.stderr)
+        #if self.verbosity >= level:
+        print(message, file=sys.stderr)
 
     def get(self):
         """Return the bootloader version and remember supported commands."""
