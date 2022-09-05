@@ -387,4 +387,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+   com = init_service_radar_distance()
