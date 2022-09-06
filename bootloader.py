@@ -665,7 +665,7 @@ def main():
             print(str(e))
             loader.debug(0, "Erase failed -- probably due to readout protection")
             loader.debug(0, "Quit")
-            loader.stm32.reset_from_flash()
+            loader.reset_from_flash()
         
         #loader.extended_erase_memory()
         #address = 0x08000000
