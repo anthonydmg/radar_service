@@ -573,7 +573,7 @@ class Stm32Loader:
             self.write(b"\xff\xff\x00")
 
         previous_timeout_value = self.serial_connection.timeout
-        self.serial_connection.timeout = 10
+        self.serial_connection.timeout = 30
         #self.serial_connection.connect()
         print("Extended erase (0x44), this can take ten seconds or more")
         try:
