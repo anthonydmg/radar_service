@@ -668,11 +668,11 @@ def main():
             loader.reset_from_flash()
          
         #loader.extended_erase_memory()
-        #address = 0x08000000
-        #with open('acc_module_server.bin', "rb") as read_file:
-        #        binary_data = bytearray(read_file.read())
+        address = 0x08000000
+        with open('acc_module_server.bin', "rb") as read_file:
+                binary_data = bytearray(read_file.read())
 
-        #loader.write_memory_data(address, binary_data)
+        loader.write_memory_data(address, binary_data)
 
     except SystemExit:
         print('Ocurrio un error')
