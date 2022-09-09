@@ -539,7 +539,7 @@ class Stm32Loader:
         self._wait_for_ack("0x92 readout unprotect failed")
         self.debug(20, "    Mass erase -- this may take a while")
         time.sleep(20)
-        self.debug(20, "    Unprotect / mass erase done")
+        self.debug(20, "    U\nprotect / mass erase done")
         self.debug(20, "    Reset after automatic chip reset due to readout unprotect")
         self.reset_from_system_memory()
     
@@ -657,7 +657,7 @@ def main():
         finally:
             loader.reset()
 
-        '''
+        
         try:
             loader.readout_unprotect()
         except Exception as e:
@@ -666,13 +666,13 @@ def main():
             loader.debug(0, "Erase failed -- probably due to readout protection")
             loader.debug(0, "Quit")
             loader.reset_from_flash()
-        ''' 
+         
         #loader.extended_erase_memory()
-        address = 0x08000000
-        with open('acc_module_server.bin', "rb") as read_file:
-                binary_data = bytearray(read_file.read())
+        #address = 0x08000000
+        #with open('acc_module_server.bin', "rb") as read_file:
+        #        binary_data = bytearray(read_file.read())
 
-        loader.write_memory_data(address, binary_data)
+        #loader.write_memory_data(address, binary_data)
 
     except SystemExit:
         print('Ocurrio un error')
