@@ -672,7 +672,7 @@ def main():
         with open('acc_module_server.bin', "rb") as read_file:
                 binary_data = bytearray(read_file.read())
                 print('binary_data: ',len(binary_data))
-                print(binary_data)
+                #print(binary_data)
 
         loader.write_memory_data(address, binary_data)
 
