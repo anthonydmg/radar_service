@@ -650,14 +650,13 @@ def main():
     try:
         loader = Stm32Loader()
         loader.connect()
-        '''try:
+        try:
             loader.read_device_id()
             #loader.read_device_uid()
             #loader.perform_commands()
         finally:
             loader.reset()
 
-        
         try:
             loader.readout_unprotect()
         except Exception as e:
@@ -666,12 +665,11 @@ def main():
             loader.debug(0, "Erase failed -- probably due to readout protection")
             loader.debug(0, "Quit")
             loader.reset_from_flash()
-         '''
         #loader.extended_erase_memory()
         address = 0x08000000
         with open('acc_module_server.bin', "rb") as read_file:
                 binary_data = bytearray(read_file.read())
-                print('binary_data: ',len(binary_data))
+                print('Load binary_data: ',len(binary_data))
                 #print(binary_data)
 
         loader.write_memory_data(address, binary_data)
