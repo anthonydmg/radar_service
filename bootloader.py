@@ -106,7 +106,7 @@ class SerialConnection:
             # don't enable software flow control
             xonxoff=0,
             # don't enable RTS/CTS flow control
-            rtscts=1,
+            rtscts=0,
             # set a timeout value, None for waiting forever
             timeout=self._timeout,
         )
