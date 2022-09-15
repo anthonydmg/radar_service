@@ -666,8 +666,8 @@ def main():
             loader.debug(0, "Quit")
             loader.reset_from_flash()
         '''
-        
-        loader.extended_erase_memory()
+        loader.reset()
+        #loader.extended_erase_memory()
         '''address = 0x08000000
         with open('acc_module_server.bin', "rb") as read_file:
                 binary_data = bytearray(read_file.read())
