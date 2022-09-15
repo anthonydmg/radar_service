@@ -73,7 +73,7 @@ class SerialConnection:
         """Construct a SerialConnection (not yet connected)."""
         self.serial_port = '/dev/ttyS0'
         self.baud_rate = baud_rate
-        self.parity = serial.PARITY_NONE
+        self.parity = serial.PARITY_EVEN
 
         self.swap_rts_dtr = False
         self.reset_active_high = False
@@ -657,7 +657,7 @@ def main():
         finally:
             loader.reset()
 
-        try:
+        '''try:
             loader.readout_unprotect()
         except Exception as e:
             # may be caused by readout protection
@@ -665,15 +665,17 @@ def main():
             loader.debug(0, "Erase failed -- probably due to readout protection")
             loader.debug(0, "Quit")
             loader.reset_from_flash()
-        #loader.extended_erase_memory()
-        address = 0x08000000
+        '''
+        
+        loader.extended_erase_memory()
+        '''address = 0x08000000
         with open('acc_module_server.bin', "rb") as read_file:
                 binary_data = bytearray(read_file.read())
                 print('Load binary_data: ',len(binary_data))
                 #print(binary_data)
 
         loader.write_memory_data(address, binary_data)
-
+        '''
     except SystemExit:
         print('Ocurrio un error')
 

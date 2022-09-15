@@ -25,7 +25,7 @@ def home():
 
 @radar.route('/api/radar/distance', methods = ["GET"])
 def distance():
-    #distance = read_distance(com=com)
-    distance = random() * 20.0
+    distance = read_distance(com=com)
+    #distance = random() * 20.0
     return jsonify(distance = distance)
 
