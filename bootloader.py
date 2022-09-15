@@ -73,7 +73,7 @@ class SerialConnection:
         """Construct a SerialConnection (not yet connected)."""
         self.serial_port = '/dev/ttyS0'
         self.baud_rate = baud_rate
-        self.parity = serial.PARITY_EVEN
+        self.parity = serial.PARITY_NONE
 
         self.swap_rts_dtr = False
         self.reset_active_high = False
