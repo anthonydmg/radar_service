@@ -358,7 +358,11 @@ def main():
 
 if __name__ == "__main__":
    com = init_service_radar_distance()
-   #_polling_mode_distance(com, 30)
+   # Wait for it to start
+   com.wait_start()
+   print('Sensor activated')
+   mean_distance = read_distance(com)
+   print('mean_distance:', mean_distance)
    time.sleep(0.3)
    mean_distance = read_distance(com)
    print('mean_distance:', mean_distance)
