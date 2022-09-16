@@ -155,8 +155,11 @@ def read_distance(com):
         print(f'dist_{count}_distance={dist_distance /1000} m', end = '')
         print(f' dist_{count}_amplitude={dist_amplitude}', end = '')
         list_distances.append(dist_distance)
-
-    mean_distance = sum(list_distances) / len(list_distances)
+    num_dist = len(list_distances)
+    if num_dist > 0: 
+        mean_distance = sum(list_distances) / len(num_dist)
+    else:
+        mean_distance = 0
     print('', end ='', flush = True)
     return mean_distance
 
