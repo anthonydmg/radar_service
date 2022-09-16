@@ -391,5 +391,6 @@ def main():
 
 if __name__ == "__main__":
    com = init_service_radar_distance()
-   mean_distance = read_distance(com)
-   print('mean_distance:', mean_distance)
+   _polling_mode_distance(com, 1)
+   #mean_distance = read_distance(com)
+   #print('mean_distance:', mean_distance)
