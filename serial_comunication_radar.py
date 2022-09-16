@@ -282,7 +282,7 @@ def init_service_radar_distance():
     com.register_write(5, 0)
 
     # Activate and start
-    com.register_write(3,6)
+    com.register_write(3,3)
 
     return com
 
@@ -388,3 +388,5 @@ def main():
 
 if __name__ == "__main__":
    com = init_service_radar_distance()
+   mean_distance = read_distance(com)
+   print('mean_distance:', mean_distance)
