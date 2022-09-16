@@ -289,39 +289,6 @@ def init_service_radar_distance():
 
     return com
 
-def read_radar_distance():
-    # Rasberry Mini Uart PORT
-    port = '/dev/ttyS0'
-    # XM132 is true
-    flowcontrol = True
-    com = ModuleCommunication(port, flowcontrol)
-    # Make sure that module is stopped
-    com.register_write(0x03, 0)
-    # Give some time to stop (status register could be polled too)
-    time.sleep(0.5)
-    # Clear any errors and status
-    com.register_write(0x3, 4)
-    # Read product ID
-    product_identification =  com.register_read(0x10)
-    print(f'product_identification=0x{product_identification:08X}')
-
-    version = com.buffer_read(0)
-    print(f'Software version: {version}')
-    
-    # Set Mode read distance
-    mode = 'distance'
-    com.register_write(0x2, 0x400)
-    
-    # Update rate 1Hz
-    com.register_write(0x23, 1000)
-    
-    # Disable UART streaming mode
-    com.register_write(5, 0)
-
-    # Activate and start
-    com.register_write(3,6)
-    
-    #_polling_mode_presence()
 
 
 def module_software_test(port, flowcontrol, mode, streaming, duration):
@@ -391,6 +358,7 @@ def main():
 
 if __name__ == "__main__":
    com = init_service_radar_distance()
-   _polling_mode_distance(com, 10)
-   #mean_distance = read_distance(com)
-   #print('mean_distance:', mean_distance)
+   #_polling_mode_distance(com, 30)
+   time.sleep(0.3)
+   mean_distance = read_distance(com)
+   print('mean_distance:', mean_distance)
