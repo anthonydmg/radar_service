@@ -365,7 +365,7 @@ def main():
 
 if __name__ == "__main__":
    com = init_service_radar_distance()
-   _polling_mode_distance(com, 0.2)
+   _polling_mode_distance(com, 1)
    # Wait for it to start
    #com.wait_start()
    #print('Sensor activated')
