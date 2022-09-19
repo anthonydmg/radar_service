@@ -143,6 +143,13 @@ class ModuleCommunication:
 
 
 def read_distance(com):
+    # Read out distance start
+    dist_start = com.register_read(0x81)
+    print(f'dist_start={dist_start / 1000} m')
+
+    dist_length = com.register_read(0x82)
+    print(f'dist_length={dist_length / 1000} m')
+
     com.register_write(3,4)
     # Wait for data read
     com.wait_for_data(2)
@@ -358,11 +365,12 @@ def main():
 
 if __name__ == "__main__":
    com = init_service_radar_distance()
+   _polling_mode_distance(com, 0.2)
    # Wait for it to start
-   com.wait_start()
-   print('Sensor activated')
-   mean_distance = read_distance(com)
-   print('mean_distance:', mean_distance)
-   time.sleep(0.3)
-   mean_distance = read_distance(com)
-   print('mean_distance:', mean_distance)
+   #com.wait_start()
+   #print('Sensor activated')
+   #mean_distance = read_distance(com)
+   #print('mean_distance:', mean_distance)
+   #time.sleep(0.3)
+   #mean_distance = read_distance(com)
+   #print('mean_distance:', mean_distance)
