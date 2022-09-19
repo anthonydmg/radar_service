@@ -283,7 +283,7 @@ def init_service_radar_distance():
     
     # Set Mode read distance
     mode = 'distance'
-    com.register_write(0x2, 0x400)
+    com.register_write(0x2, 0x200)
     
     # Update rate 1Hz
     com.register_write(0x23, 1000)
@@ -366,6 +366,8 @@ def main():
 if __name__ == "__main__":
    com = init_service_radar_distance()
    _polling_mode_distance(com, 60)
+   ## Close conection
+   com.register_write(0x03, 0)
    # Wait for it to start
    #com.wait_start()
    #print('Sensor activated')
